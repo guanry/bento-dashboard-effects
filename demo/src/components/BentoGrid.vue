@@ -12,7 +12,7 @@ const props = defineProps({
 
 const {
   gridEl, layout, drag, dragTitle, ghostStyle, styleFor, onCardPointerDown,
-  view, onCardClick, collapse, innerStyleFor, closeStyle, dims: gridDims,
+  view, onCardClick, collapse, innerStyleFor, closeStyle, dims: gridDims, hist,
 } = props.grid
 
 const views = {
@@ -63,6 +63,8 @@ const views = {
         <div class="hud-row" v-if="view.expandedId"><span>缩略</span><b>{{ layout.length - 1 }} 张</b></div>
         <div class="hud-row"><span>拖拽</span><b>{{ dragTitle }}</b></div>
         <div class="hud-row"><span>重排</span><b>{{ drag.reflows }}</b></div>
+        <div class="hud-row"><span>撤销</span><b>{{ hist.index > 0 ? '✓' : '—' }}</b></div>
+        <div class="hud-row"><span>重做</span><b>{{ hist.index < hist.size - 1 ? '✓' : '—' }}</b></div>
       </div>
     </Teleport>
   </div>

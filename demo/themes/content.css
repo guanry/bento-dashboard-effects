@@ -1,0 +1,307 @@
+/* ============================================================
+   图卡内容型(Content First)
+   真实图片当主角:四张卡变成 SVG 风景照卡,出杯量变成 Details
+   行程面板,积分变成左侧个人档案栏。整页只有「单橙」一个强调色
+   做交互。布局为 12×6:左档案栏 + 四图卡 + 宽详情。
+   通过 <html data-theme="content"> 启用。
+   ============================================================ */
+
+html[data-theme='content'] {
+  color-scheme: light;
+
+  --panel: #fbfaf7;
+  --card-dark: #ffffff;
+  --text: #26211b;
+  --muted: rgba(38, 33, 27, 0.55);
+  --line: rgba(38, 33, 27, 0.09);
+  --orange: #f4623a;                       /* 单色交互:橙 */
+  --yellow: #f4623a;
+  --blue: #f4623a;
+  --accent: #f4623a;
+  --accent-ink: #ffffff;
+  --stage:
+    radial-gradient(900px 600px at 85% 0%, rgba(244, 98, 58, 0.28), transparent 60%),
+    radial-gradient(800px 600px at 0% 100%, rgba(244, 98, 58, 0.14), transparent 60%),
+    linear-gradient(165deg, #121624 0%, #0b0d16 60%, #0d1020 100%);
+}
+
+/* ---- 舞台与窗口 ---- */
+
+html[data-theme='content'] body {
+  background: var(--stage);
+}
+
+html[data-theme='content'] .app-window {
+  background: var(--panel);
+  border-color: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.45);
+}
+
+html[data-theme='content'] .stage-badge {
+  background: var(--accent);
+  color: #fff;
+}
+
+html[data-theme='content'] .demo-tabs button.on {
+  background: var(--accent);
+  border-color: transparent;
+  color: #fff;
+}
+
+html[data-theme='content'] .theme-toggle button.on {
+  background: var(--accent);
+  color: #fff;
+}
+
+html[data-theme='content'] .round-btn.has-dot::after {
+  background: var(--accent);
+}
+
+/* ---- 侧栏(白) ---- */
+
+html[data-theme='content'] .sidebar {
+  background: #ffffff;
+}
+
+html[data-theme='content'] .sb-logo {
+  background: var(--accent);
+  color: #fff;
+}
+
+html[data-theme='content'] .sb-btn {
+  color: rgba(38, 33, 27, 0.45);
+}
+
+html[data-theme='content'] .sb-btn.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+html[data-theme='content'] .sb-avatar {
+  background: #26211b;
+  color: #fff;
+}
+
+/* ---- Bento 框架 ---- */
+
+html[data-theme='content'] .bento-card {
+  box-shadow: 0 10px 26px rgba(20, 16, 10, 0.1);
+}
+
+html[data-theme='content'] .bento-ghost {
+  border-color: rgba(38, 33, 27, 0.32);
+  background: rgba(38, 33, 27, 0.03);
+}
+
+html[data-theme='content'] .bento-hud {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(38, 33, 27, 0.12);
+}
+
+html[data-theme='content'] .bento-hud .hud-row span {
+  color: rgba(38, 33, 27, 0.5);
+}
+
+html[data-theme='content'] .bento-hud .hud-row b {
+  color: #26211b;
+}
+
+html[data-theme='content'] .bento-hud.live {
+  border-color: rgba(244, 98, 58, 0.6);
+}
+
+html[data-theme='content'] .bento-hud.live .hud-row b {
+  color: #f4623a;
+}
+
+/* ---- 照片卡(四张图卡共用) ---- */
+
+html[data-theme='content'] .pc {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+}
+
+html[data-theme='content'] .pf-photo {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+html[data-theme='content'] .pf-photo svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.5s var(--bento-ease);
+}
+
+html[data-theme='content'] .bento-card:hover .pf-photo svg {
+  transform: scale(1.07);
+}
+
+html[data-theme='content'] .pf-tag {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  z-index: 2;
+}
+
+html[data-theme='content'] .pf-cap {
+  padding: 10px 14px 12px;
+  flex: none;
+}
+
+html[data-theme='content'] .pf-cap b {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 800;
+}
+
+html[data-theme='content'] .pf-cap span {
+  display: block;
+  margin-top: 2px;
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
+/* ---- Details 面板(出杯量变体) ---- */
+
+html[data-theme='content'] .dtp {
+  height: 100%;
+  background: #ffffff;
+  padding: 18px 22px;
+  display: flex;
+  flex-direction: column;
+}
+
+html[data-theme='content'] .dtp > h3 {
+  font-size: 15px;
+  font-weight: 800;
+  margin-bottom: 14px;
+}
+
+html[data-theme='content'] .dtp-row {
+  display: grid;
+  grid-template-columns: 86px 1fr 90px;
+  gap: 14px;
+  align-items: center;
+  padding: 13px 4px;
+  border-bottom: 1px solid rgba(38, 33, 27, 0.07);
+}
+
+html[data-theme='content'] .dtp-row:last-child {
+  border-bottom: none;
+}
+
+html[data-theme='content'] .dtp-date b {
+  display: block;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+html[data-theme='content'] .dtp-date i {
+  font-style: normal;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+html[data-theme='content'] .dtp-info b {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+html[data-theme='content'] .dtp-info span {
+  display: block;
+  margin-top: 2px;
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
+html[data-theme='content'] .dtp-state {
+  justify-self: end;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 11px;
+  border-radius: 999px;
+}
+
+html[data-theme='content'] .dtp-state.done {
+  background: rgba(244, 98, 58, 0.12);
+  color: #f4623a;
+}
+
+html[data-theme='content'] .dtp-state.pending {
+  background: rgba(38, 33, 27, 0.07);
+  color: var(--muted);
+}
+
+/* ---- 个人档案栏(积分变体) ---- */
+
+html[data-theme='content'] .pfl {
+  height: 100%;
+  background: #ffffff;
+  padding: 20px 18px;
+  display: flex;
+  flex-direction: column;
+}
+
+html[data-theme='content'] .pfl-ava {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(150deg, #ffb28a, #f4623a);
+  color: #fff;
+  font-size: 20px;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+}
+
+html[data-theme='content'] .pfl > b {
+  margin-top: 12px;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+html[data-theme='content'] .pfl > span {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+html[data-theme='content'] .pfl-menu {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+}
+
+html[data-theme='content'] .pfl-menu span {
+  padding: 11px 2px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: rgba(38, 33, 27, 0.75);
+  border-bottom: 1px solid rgba(38, 33, 27, 0.06);
+  cursor: pointer;
+  transition: color 0.15s, padding-left 0.15s;
+}
+
+html[data-theme='content'] .pfl-menu span:hover,
+html[data-theme='content'] .pfl-menu span.on {
+  color: #f4623a;
+  padding-left: 8px;
+}
+
+html[data-theme='content'] .pfl-foot {
+  margin-top: auto;
+  font-size: 10.5px;
+  color: var(--muted);
+}

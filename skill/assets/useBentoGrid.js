@@ -1,4 +1,5 @@
 import { ref, reactive, computed, watch, onBeforeUnmount } from 'vue'
+import { solveLayout } from './solver.js'
 
 const clamp = (v, min, max) => Math.min(max, Math.max(min, v))
 
@@ -8,8 +9,9 @@ const clamp = (v, min, max) => Math.min(max, Math.max(min, v))
  * - 拖拽中:被拖卡片脱离文档流跟随指针(带缓动 + 速度倾斜),
  *   其余卡片按"最近空位"算法即时重排,CSS transition 负责平滑让位
  * - 松手:卡片从指针位置过渡吸附到目标格位
+ * - 撤销/重做:布局快照栈,Cmd/Ctrl+Z 与 Ctrl+Y(或 +Shift)驱动
  */
-export function useBentoGrid(initialCards, { cols = 4, rows = 3, gap = 12 } = {}) {
+export function useBentoGrid(initialCards, { cols = 4, rows = 3, gap = 12, onCommit } = {}) {
   const gridEl = ref(null)
   const layout = ref(initialCards.map(c => ({ ...c })))
   const cell = reactive({ w: 120, h: 120 })
@@ -31,6 +33,51 @@ export function useBentoGrid(initialCards, { cols = 4, rows = 3, gap = 12 } = {}
 
   // 拖拽起始布局快照:让位结果只由落点格位决定,与拖拽路径无关
   let originLayout = []
+
+  /* ---------------- 撤销 / 重做(布局快照栈) ---------------- */
+
+  const hist = reactive({ index: 0, size: 1 })
+  const stack = []
+  const snapshot = () => JSON.parse(JSON.stringify(layout.value))
+
+  // 每次用户动作(拖拽结束 / 撤销 / 重做)后提交,交由 onCommit 持久化
+  function commit() {
+    stack.splice(hist.index + 1)
+    stack.push(snapshot())
+    hist.index = stack.length - 1
+    hist.size = stack.length
+    onCommit?.(layout.value.map(c => ({ ...c })))
+  }
+
+  function undo() {
+    if (drag.active || hist.index <= 0) return
+    view.expandedId = null
+    hist.index -= 1
+    layout.value = JSON.parse(JSON.stringify(stack[hist.index]))
+    onCommit?.(layout.value.map(c => ({ ...c })))
+  }
+
+  function redo() {
+    if (drag.active || hist.index >= hist.size - 1) return
+    view.expandedId = null
+    hist.index += 1
+    layout.value = JSON.parse(JSON.stringify(stack[hist.index]))
+    onCommit?.(layout.value.map(c => ({ ...c })))
+  }
+
+  function onHistoryKey(e) {
+    // 输入框里的 Cmd/Ctrl+Z 交给浏览器原生行为
+    const t = e.target
+    if (t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement || t.isContentEditable) return
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
+      e.preventDefault()
+      e.shiftKey ? redo() : undo()
+    } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'y') {
+      e.preventDefault()
+      redo()
+    }
+  }
+  window.addEventListener('keydown', onHistoryKey)
 
   /* ---------------- 就地展开(Shared Element Expand) ---------------- */
 
@@ -113,67 +160,16 @@ export function useBentoGrid(initialCards, { cols = 4, rows = 3, gap = 12 } = {}
     ro.observe(el)
   })
 
-  /* ---------------- 布局求解 ---------------- */
+  /* ---------------- 布局求解(纯函数在 ../bento/solver.js) ---------------- */
 
-  // 把 dragged 放到指定格位后,其余卡片按阅读顺序依次就位;
-  // 发生重叠的卡片移动到"离自己最近、且优先靠向拖拽起始空位"的可行位置——
-  // 让位链条会自然朝被拖卡片留下的空位方向流动。
-  // 返回 null 表示该目标格位无解(面积不够),由调用方换候选位重试。
   function computeLayout(dragged) {
-    const { cols, rows } = dims
-    const hole = drag.origin
-    const occupied = new Array(cols * rows).fill(null)
-    const occupy = c => {
-      for (let dy = 0; dy < c.h; dy++)
-        for (let dx = 0; dx < c.w; dx++)
-          occupied[(c.y + dy) * cols + c.x + dx] = c.id
-    }
-    const fits = c => {
-      if (c.x < 0 || c.y < 0 || c.x + c.w > cols || c.y + c.h > rows) return false
-      for (let dy = 0; dy < c.h; dy++)
-        for (let dx = 0; dx < c.w; dx++)
-          if (occupied[(c.y + dy) * cols + c.x + dx]) return false
-      return true
-    }
-
-    occupy(dragged)
-    const out = [{ ...dragged }]
-
-    const others = originLayout
-      .filter(c => c.id !== dragged.id)
-      .slice()
-      .sort((a, b) => a.y - b.y || a.x - b.x)
-
-    for (const c of others) {
-      if (fits(c)) {
-        occupy(c)
-        out.push({ ...c })
-        continue
-      }
-      // 与被拖卡片同尺寸 → 直接换位,进入其留下的空位(最小位移)
-      if (c.w === dragged.w && c.h === dragged.h && fits({ ...c, x: hole.x, y: hole.y })) {
-        const swapped = { ...c, x: hole.x, y: hole.y }
-        occupy(swapped)
-        out.push(swapped)
-        continue
-      }
-      let best = null
-      let bestScore = Infinity
-      for (let y = 0; y <= rows - c.h; y++) {
-        for (let x = 0; x <= cols - c.w; x++) {
-          const cand = { ...c, x, y }
-          if (!fits(cand)) continue
-          const score =
-            (x - c.x) ** 2 + (y - c.y) ** 2 +
-            2 * ((x - hole.x) ** 2 + (y - hole.y) ** 2)
-          if (score < bestScore) { bestScore = score; best = cand }
-        }
-      }
-      if (!best) return null
-      occupy(best)
-      out.push({ ...best })
-    }
-    return out
+    return solveLayout({
+      baseCards: originLayout.filter(c => c.id !== dragged.id),
+      dragged,
+      hole: { ...drag.origin },
+      cols: dims.cols,
+      rows: dims.rows,
+    })
   }
 
   // 由指针位置换算期望格位;若该格位放不下(如大卡换位后剩余面积不足),
@@ -305,6 +301,7 @@ export function useBentoGrid(initialCards, { cols = 4, rows = 3, gap = 12 } = {}
     releaseTimer = setTimeout(() => { drag.releasing = null }, 480)
     lastDragEnd = Date.now()
     document.body.classList.remove('is-bento-dragging')
+    commit() // 拖拽落定 → 提交快照(撤销栈 + 持久化)
   }
 
   function setLayout(list) {
@@ -318,6 +315,11 @@ export function useBentoGrid(initialCards, { cols = 4, rows = 3, gap = 12 } = {}
     dims.rows = r
     layout.value = list.map(x => ({ ...x }))
     measure()
+    // 构图级切换重置撤销栈:撤销语义限定在"当前构图内的拖拽"
+    stack.splice(0)
+    stack.push(snapshot())
+    hist.index = 0
+    hist.size = 1
   }
 
   /* ---------------- 渲染辅助 ---------------- */
@@ -396,11 +398,15 @@ export function useBentoGrid(initialCards, { cols = 4, rows = 3, gap = 12 } = {}
     }
   })
 
+  // 初始快照入栈
+  stack.push(snapshot())
+
   onBeforeUnmount(() => {
     ro?.disconnect()
     cancelAnimationFrame(rafId)
     clearTimeout(releaseTimer)
     window.removeEventListener('keydown', onKey)
+    window.removeEventListener('keydown', onHistoryKey)
     onPendingEnd()
     window.removeEventListener('pointermove', onMove)
     window.removeEventListener('pointerup', onUp)
@@ -411,5 +417,6 @@ export function useBentoGrid(initialCards, { cols = 4, rows = 3, gap = 12 } = {}
   return {
     gridEl, layout, drag, dragTitle, ghostStyle, styleFor, onCardPointerDown, dims,
     view, expand, collapse, onCardClick, innerStyleFor, closeStyle, setLayout, setGrid,
+    hist, undo, redo,
   }
 }
