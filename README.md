@@ -11,7 +11,13 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)]()
 
-**演示视频 · Demos → [docs/](docs/)**
+**演示视频 · Demos**
+
+![拖拽重排 + 就地放大](docs/v1-bento-drag-expand.gif)
+
+![全局筛选 + 图表悬停联动](docs/v2-filter-linked-hover.gif)
+
+![滚动吸顶 + 详情抽屉 + 主题切换](docs/v3-sticky-drawer-themes.gif)
 
 </div>
 
