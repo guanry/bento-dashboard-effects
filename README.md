@@ -71,6 +71,18 @@ npm install
 npm run dev   # http://localhost:5173
 ```
 
+### 🤖 其他 AI 工具也能用
+
+技能是开放格式(SKILL.md + 纯 Markdown/代码),**不绑定 ZCode**:
+
+| 工具 | 用法 |
+|---|---|
+| 遵循 Agent Skills 规范的 CLI(Claude Code 等) | 把 `skill/` 复制到该工具的技能目录,如 `~/.claude/skills/bento-dashboard-effects/` |
+| Cursor / Windsurf / Copilot 等编程 AI | 无需技能系统——让 AI 读 `skill/SKILL.md` 与 `skill/references/`,照模式集成到你的项目 |
+| 网页对话 AI(ChatGPT / Claude.ai / Gemini) | 把 `SKILL.md` + 对应 `references/*.md` 粘贴为上下文,再贴上你的项目代码 |
+
+引擎代码(`useBentoGrid.js` / `solver.js` / `bento.css`)是标准 Vue3/CSS 文件,零平台绑定;移植到 React/Svelte 的思路在 references 里同样成立。
+
 ### 🧠 它是怎么做的(三篇核心机制)
 
 - **拖拽让位的灵魂**:布局求解器 —— [skill/references/drag-engine.md](skill/references/drag-engine.md)
@@ -99,6 +111,8 @@ No SortableJS / Muuri / GSAP — one custom Bento engine + CSS transitions + des
 
 **Install as an AI skill**: copy `skill/` into `~/.agents/skills/bento-dashboard-effects/`.
 **Run the demo**: `cd demo && npm install && npm run dev`.
+
+**Works with other AI tools too**: the skill is an open format (SKILL.md + plain Markdown/JS), not tied to any specific agent. Agent-Skills-compatible CLIs (e.g. Claude Code) can load `skill/` directly; coding agents (Cursor, Windsurf, Copilot) can just read `skill/SKILL.md` and follow it; web chat AIs work fine with the docs pasted as context.
 
 Mechanism docs live in [skill/references/](skill/references/) (Chinese) — the drag solver, scroll-anchor pitfalls and transition-in-background-tab workarounds are all documented with reproduction steps.
 
