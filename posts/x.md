@@ -16,7 +16,7 @@
 6 种动效 × 6 套主题,零第三方库,45KB。
 
 Vue3 + Vite,MIT 开源👇
-https://gitee.com/guanxi1971/bento-dashboard-effects
+github.com/guanry/bento-dashboard-effects(国内镜像: gitee.com/guanxi1971/bento-dashboard-effects)
 
 配套 AI 技能已打包:把 skill/ 丢进 ~/.agents/skills/,你的 AI 就会这套。
 
@@ -38,7 +38,7 @@ I stopped importing SortableJS and built a dashboard motion engine with AI inste
 6 effects × 6 themes, zero deps, 45KB gzipped.
 
 Vue 3 + Vite. MIT. Open source 👇
-https://gitee.com/guanxi1971/bento-dashboard-effects
+github.com/guanry/bento-dashboard-effects(国内镜像: gitee.com/guanxi1971/bento-dashboard-effects)
 
 Also packaged as an AI skill — drop `skill/` into ~/.agents/skills/ and your agent knows the whole playbook.
 
