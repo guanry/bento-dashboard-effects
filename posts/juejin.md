@@ -8,7 +8,7 @@
 - 筛选联动 + 悬停联动:`docs/v2-filter-linked-hover.gif`
 - 滚动吸顶 + 详情抽屉 + 六主题一键切换:`docs/v3-sticky-drawer-themes.gif`
 
-仓库:`bento-dashboard-effects`(skill/ 是可直接安装的 AI 技能,demo/ 是 Vue3 + Vite 演示项目)
+仓库:https://gitee.com/guanxi1971/bento-dashboard-effects(skill/ 是可直接安装的 AI 技能,demo/ 是 Vue3 + Vite 演示项目)
 
 ## 为什么不用 SortableJS / Muuri?
 
